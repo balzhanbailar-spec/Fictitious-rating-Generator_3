@@ -1,12 +1,9 @@
 import csv
 import numpy as np
-
-
 class GradesUpdater:
     def __init__(self, filename, seed=42):
         self.filename = filename
         self.rng = np.random.default_rng(seed)
-
     def update_grades(self):
         rows = []
         with open(self.filename, "r") as file:
