@@ -7,7 +7,7 @@ import seaborn as sns
 import os
 
 
-# ========== 9. FakeGradesGenerator (Генерация данных) ==========
+# ========== Задание 9: Генератор исходных данных ==========
 class FakeGradesGenerator:
     def __init__(self, filename, seed=42):
         self.filename = filename
@@ -17,23 +17,20 @@ class FakeGradesGenerator:
 
     def generate(self):
         random.seed(self.seed)
-        try:
-            with open(self.filename, "w", newline="") as f:
-                writer = csv.writer(f)
-                writer.writerow(["student_id", "subject_id", "grade"])
-                for student_id in range(1, self.num_students + 1):
-                    for subject_id in range(1, self.num_subjects + 1):
-                        grade = random.randint(2, 5)
-                        writer.writerow([student_id, subject_id, grade])
-            print(f"=== Задание 9: Файл '{self.filename}' успешно создан ===")
-        except Exception as e:
-            print(f"Ошибка при создании файла: {e}")
+        with open(self.filename, "w", newline="") as f:
+            writer = csv.writer(f)
+            writer.writerow(["student_id", "subject_id", "grade"])
+            for student_id in range(1, self.num_students + 1):
+                for subject_id in range(1, self.num_subjects + 1):
+                    grade = random.randint(2, 5)
+                    writer.writerow([student_id, subject_id, grade])
 
     def run(self):
         self.generate()
+        print(f"=== Задание 9: Файл '{self.filename}' создан ===")
 
 
-# ========== 10. GradesCorrelation (Работа с шумом и корреляцией) ==========
+# ========== Задание 10: Генерация скоррелированных данных ==========
 class GradesCorrelation:
     def __init__(self, input_file, output_file, seed=42):
         self.input_file = input_file
@@ -42,61 +39,78 @@ class GradesCorrelation:
 
     def process(self):
         if not os.path.exists(self.input_file):
-            print(f"Ошибка: Входной файл {self.input_file} не найден.")
+            print(f"Ошибка: {self.input_file} не найден")
             return
 
-        df_in = pd.read_csv(self.input_file)
-        # Создаем коррелированную оценку: 70% от оригинала + случайный шум
-        noise = self.rng.normal(0, 0.3, size=len(df_in))
-        df_in['grade2'] = (0.7 * df_in['grade'] + noise).clip(2.0, 5.0).round(2)
+        with open(self.input_file, "r") as f:
+            reader = csv.DictReader(f)
+            rows = list(reader)
 
-        df_in.to_csv(self.output_file, index=False)
-        print(f"=== Задание 10: Файл '{self.output_file}' с корреляцией создан ===")
+        output_rows = []
+        for row in rows:
+            sid = row['student_id']
+            subid = row['subject_id']
+            grade1 = float(row['grade'])
+
+            # grade2 = 0.7 * grade1 + шум
+            noise = self.rng.normal(0, 0.3)
+            grade2 = np.clip(0.7 * grade1 + noise, 2.0, 5.0)
+            output_rows.append([sid, subid, grade1, round(grade2, 2)])
+
+        with open(self.output_file, "w", newline="") as f:
+            writer = csv.writer(f)
+            writer.writerow(["student_id", "subject_id", "grade1", "grade2"])
+            writer.writerows(output_rows)
 
     def run(self):
         self.process()
+        print(f"=== Задание 10: Файл '{self.output_file}' с корреляцией создан ===")
 
 
-# ========== 11. GradesValidator (Валидация Pandas) ==========
+# ========== Задание 11: Валидация данных (Pandas) ==========
 class GradesValidator:
     def __init__(self, filename):
         self.filename = filename
+        self.df = None
 
     def run(self):
-        print("\n=== Задание 11: Валидация ===")
-        try:
-            df = pd.read_csv(self.filename)
-            print(f"✅ Файл '{self.filename}' загружен.")
+        print("\n=== Задание 11: Валидация данных ===")
+        if not os.path.exists(self.filename):
+            print("Файл не найден.")
+            return
 
-            # Проверка типов и диапазона
-            if not np.issubdtype(df['grade'].dtype, np.number):
-                print("❌ Ошибка: колонка 'grade' не является числовой!")
-            elif (df['grade'] < 2).any() or (df['grade'] > 5).any():
-                print("❌ Ошибка: Обнаружены оценки вне диапазона [2, 5]!")
-            else:
-                print("✅ Валидация пройдена: все оценки в норме.")
+        self.df = pd.read_csv(self.filename)
+        print(f"✅ Файл '{self.filename}' загружен.")
 
-            print("\nКраткая статистика:")
-            print(df['grade'].describe())
-        except Exception as e:
-            print(f"Ошибка при валидации: {e}")
+        # Проверка типов данных
+        print(f"Типы колонок:\n{self.df.dtypes}")
+
+        # Проверка диапазона оценок [2, 5]
+        grades = self.df['grade']
+        if (grades < 2).any() or (grades > 5).any():
+            print("❌ Ошибка: Есть оценки вне диапазона 2-5!")
+        else:
+            print("✅ Все оценки в корректном диапазоне [2, 5].")
+
+        print("\n--- Описательная статистика ---")
+        print(self.df.describe())
 
 
-# ========== 12. GradesAnalyzer (Анализ средних баллов) ==========
+# ========== Задание 12: Анализ средних баллов ==========
 class GradesAnalyzer:
     def __init__(self, filename):
         self.filename = filename
 
     def run(self):
-        print("\n=== Задание 12: Анализ средних баллов ===")
+        print("\n=== Задание 12: Анализ средних баллов по предметам ===")
         df = pd.read_csv(self.filename)
-        # Группировка по предметам и сортировка
+        # Группировка по ID предмета и расчет среднего
         means = df.groupby('subject_id')['grade'].mean().sort_values(ascending=False)
-        print("Средние оценки по ID предметов:")
         print(means.reset_index().to_string(index=False))
+        return means
 
 
-# ========== 13. GradeVisualizer (Визуализация ООП) ==========
+# ========== Задание 13: Визуализация (ООП) ==========
 class GradeVisualizer:
     def __init__(self, file_path):
         self.file_path = file_path
@@ -107,17 +121,17 @@ class GradeVisualizer:
     def _load_data(self):
         if os.path.exists(self.file_path):
             self.df = pd.read_csv(self.file_path)
-            print(f"\n[INFO] Данные из '{self.file_path}' подгружены для графиков.")
+            print(f"\n[INFO] Данные загружены для визуализации из '{self.file_path}'")
 
-    def plot_top_subjects_boxplot(self, n_subjects=5, save_path='grades_boxplot.png'):
+    def plot_boxplot(self, n_subjects=5, save_path='grades_boxplot.png'):
         if self.df is None: return
 
-        # Берем первые N уникальных предметов
-        selected_ids = self.df['subject_id'].unique()[:n_subjects]
-        subset = self.df[self.df['subject_id'].isin(selected_ids)]
+        # Берем уникальные предметы
+        subjects = self.df['subject_id'].unique()[:n_subjects]
+        subset = self.df[self.df['subject_id'].isin(subjects)]
 
         plt.figure(figsize=(10, 6))
-        # Исправленный вызов без предупреждений (hue задан явно)
+        # Исправлено: добавили hue и legend=False для тишины в консоли
         sns.boxplot(
             x='subject_id',
             y='grade',
@@ -126,23 +140,17 @@ class GradeVisualizer:
             hue='subject_id',
             legend=False
         )
-
-        plt.title(f'Задача 13: Распределение оценок (топ-{n_subjects} предметов)')
-        plt.xlabel('ID Предмета')
-        plt.ylabel('Оценка')
+        plt.title(f'Задание 13: Распределение оценок (топ-{n_subjects} предметов)')
         plt.savefig(save_path, dpi=300)
         plt.show()
         plt.close()
-        print(f"✅ Boxplot сохранен: {save_path}")
+        print(f"✅ График Boxplot сохранен: {save_path}")
 
-    def plot_grade_histogram(self, save_path='grades_hist.png'):
+    def plot_histogram(self, save_path='grades_hist.png'):
         if self.df is None: return
-
         plt.figure(figsize=(8, 5))
         sns.histplot(self.df['grade'], bins=10, kde=True, color='skyblue')
-        plt.title('Задача 13: Общее распределение оценок (Histogram)')
-        plt.xlabel('Оценка')
-        plt.ylabel('Частота')
+        plt.title('Задание 13: Общая гистограмма оценок')
         plt.savefig(save_path, dpi=300)
         plt.show()
         plt.close()
@@ -150,34 +158,31 @@ class GradeVisualizer:
 
 
 # ============================================================
-# ГЛАВНЫЙ БЛОК УПРАВЛЕНИЯ (MAIN)
+# ГЛАВНЫЙ БЛОК ЗАПУСКА (MAIN)
 # ============================================================
 if __name__ == "__main__":
-    # Названия файлов
-    base_file = "fake_grades.csv"
-    corr_file = "fake_grades_v2.csv"
+    # 1. Генерация данных (9)
+    generator = FakeGradesGenerator("fake_grades.csv")
+    generator.run()
 
-    # Шаг 9: Генерация
-    FakeGradesGenerator(base_file).run()
+    # 2. Создание коррелированных данных (10)
+    correlation = GradesCorrelation("fake_grades.csv", "fake_grades_v2.csv")
+    correlation.run()
 
-    # Шаг 10: Корреляция
-    GradesCorrelation(base_file, corr_file).run()
-
-    # Шаг 11: Валидация
-    validator = GradesValidator(base_file)
+    # 3. Валидация (11)
+    validator = GradesValidator("fake_grades.csv")
     validator.run()
 
-    # Шаг 12: Анализ
-    analyzer = GradesAnalyzer(base_file)
+    # 4. Анализ (12)
+    analyzer = GradesAnalyzer("fake_grades.csv")
     analyzer.run()
 
-    # Шаг 13: Визуализация
+    # 5. Визуализация (13)
     print("\n" + "=" * 40)
-    print("ЗАПУСК ВИЗУАЛИЗАЦИИ ДАННЫХ")
+    print("ВЫПОЛНЕНИЕ ВИЗУАЛИЗАЦИИ")
     print("=" * 40)
+    visualizer = GradeVisualizer("fake_grades.csv")
+    visualizer.plot_boxplot(n_subjects=5)
+    visualizer.plot_histogram()
 
-    vis = GradeVisualizer(base_file)
-    vis.plot_top_subjects_boxplot(n_subjects=5)
-    vis.plot_grade_histogram()
-
-    print("\n✅ Весь цикл задач (9-13) выполнен успешно.")
+    print("\n✅ Весь проект (задания 9-13) выполнен успешно!")
