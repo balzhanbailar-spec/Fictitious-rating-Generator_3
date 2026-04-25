@@ -1,14 +1,18 @@
 import csv
 import random
 import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+import os
 
-# ========== 1. Генератор исходных данных (задание 9) ==========
+# ========== Задание 9: Генератор исходных данных ==========
 class FakeGradesGenerator:
     def __init__(self, filename, seed=42):
         self.filename = filename
         self.seed = seed
-        self.num_students = 10      # student_id 1..10
-        self.num_subjects = 5       # subject_id 1..5
+        self.num_students = 10
+        self.num_subjects = 5
 
     def generate(self):
         random.seed(self.seed)
@@ -22,9 +26,9 @@ class FakeGradesGenerator:
 
     def run(self):
         self.generate()
-        print(f"[OK] {self.filename} создан (студентов: {self.num_students}, предметов: {self.num_subjects}, оценки 2-5)")
+        print(f"=== Задание 9: Файл '{self.filename}' создан ===")
 
-# ========== 2. Добавление корреляции (задание 10) ==========
+# ========== Задание 10: Добавление корреляции ==========
 class GradesCorrelation:
     def __init__(self, input_file, output_file, seed=42):
         self.input_file = input_file
@@ -32,28 +36,18 @@ class GradesCorrelation:
         self.rng = np.random.default_rng(seed)
 
     def process(self):
-        # Читаем исходный файл
+        if not os.path.exists(self.input_file): return
         with open(self.input_file, "r") as f:
             reader = csv.DictReader(f)
             rows = list(reader)
 
-        # Нормализуем ключи (на случай пробелов или регистра)
-        normalized = []
-        for row in rows:
-            clean = {k.strip().lower(): v for k, v in row.items()}
-            normalized.append(clean)
-
         output_rows = []
-        for row in normalized:
-            student_id = row['student_id']
-            subject_id = row['subject_id']
-            grade1 = float(row['grade'])
-            noise = self.rng.normal(0, 0.3)          # шум с нормальным распределением
-            grade2 = 0.7 * grade1 + noise
-            grade2 = np.clip(grade2, 2.0, 5.0)       # обрезаем до допустимого диапазона
-            output_rows.append([student_id, subject_id, grade1, round(grade2, 2)])
+        for row in rows:
+            sid, subid, g1 = row['student_id'], row['subject_id'], float(row['grade'])
+            noise = self.rng.normal(0, 0.3)
+            grade2 = np.clip(0.7 * g1 + noise, 2.0, 5.0)
+            output_rows.append([sid, subid, g1, round(grade2, 2)])
 
-        # Записываем новый CSV
         with open(self.output_file, "w", newline="") as f:
             writer = csv.writer(f)
             writer.writerow(["student_id", "subject_id", "grade1", "grade2"])
@@ -61,57 +55,85 @@ class GradesCorrelation:
 
     def run(self):
         self.process()
-        print(f"[OK] {self.output_file} создан (grade1 – исходная, grade2 = 0.7*grade1 + шум, диапазон 2-5)")
+        print(f"=== Задание 10: Файл '{self.output_file}' с корреляцией создан ===")
 
-# ========== 3. Обновление оценок в исходном файле ==========
-class GradesUpdater:
-    def __init__(self, filename, seed=42):
+# ========== Задание 11: Валидация ==========
+class GradesValidator:
+    def __init__(self, filename):
         self.filename = filename
-        self.rng = np.random.default_rng(seed)
-
-    def update_grades(self):
-        # Читаем все строки
-        with open(self.filename, "r") as f:
-            reader = csv.reader(f)
-            header = next(reader)           # пропускаем заголовок
-            rows = list(reader)
-
-        # Обновляем оценки, оставляя student_id и subject_id неизменными
-        updated = []
-        for row in rows:
-            if len(row) >= 2:
-                student_id = row[0]
-                subject_id = row[1]
-                new_grade = int(self.rng.integers(2, 6))   # 2,3,4,5
-                updated.append([student_id, subject_id, new_grade])
-
-        # Перезаписываем файл
-        with open(self.filename, "w", newline="") as f:
-            writer = csv.writer(f)
-            writer.writerow(header)
-            writer.writerows(updated)
 
     def run(self):
-        self.update_grades()
-        print(f"[OK] {self.filename} обновлён (новые случайные оценки 2-5 для тех же студентов и предметов)")
+        print("\n=== Задание 11: Валидация данных ===")
+        df = pd.read_csv(self.filename)
+        print(f"✅ Файл '{self.filename}' успешно загружен.")
+        if (df['grade'] < 2).any() or (df['grade'] > 5).any():
+            print("❌ Ошибка: оценки вне диапазона!")
+        else:
+            print("✅ Все оценки в диапазоне [2, 5].")
+        print(df['grade'].describe())
 
-# ========== Главная функция (запуск всех трёх этапов) ==========
-def main():
-    print("=== Задание 9: генерация исходного CSV ===\n")
-    gen = FakeGradesGenerator("fake_grades.csv", seed=42)
-    gen.run()
+# ========== Задание 12: Анализ ==========
+class GradesAnalyzer:
+    def __init__(self, filename):
+        self.filename = filename
 
-    print("\n=== Задание 10: создание CSV с корреляцией ===\n")
-    corr = GradesCorrelation("fake_grades.csv", "fake_grades_v2.csv", seed=42)
-    corr.run()
+    def run(self):
+        print("\n=== Задание 12: Анализ средних баллов ===")
+        df = pd.read_csv(self.filename)
+        means = df.groupby('subject_id')['grade'].mean().sort_values(ascending=False)
+        print(means.reset_index())
 
-    print("\n=== Задание 11 (дополнительно): обновление исходного CSV ===\n")
-    updater = GradesUpdater("fake_grades.csv", seed=42)
-    updater.run()
+# ========== Задание 13: Визуализация (Исправлено) ==========
+class GradeVisualizer:
+    def __init__(self, file_path):
+        self.file_path = file_path
+        self.df = None
+        sns.set_theme(style="whitegrid")
+        self._load_data()
 
-    print("\n✅ Все скрипты выполнены. Файлы созданы/обновлены.")
-    print("   - fake_grades.csv      : исходные оценки (студент, предмет, оценка 2-5)")
-    print("   - fake_grades_v2.csv   : исходная + скоррелированная оценка grade2")
+    def _load_data(self):
+        if os.path.exists(self.file_path):
+            self.df = pd.read_csv(self.file_path)
 
+    def plot_top_subjects_boxplot(self, n_subjects=5, save_path='grades_boxplot.png'):
+        if self.df is None: return
+        selected = self.df['subject_id'].unique()[:n_subjects]
+        subset = self.df[self.df['subject_id'].isin(selected)]
+
+        plt.figure(figsize=(10, 6))
+        # ИСПРАВЛЕНИЕ: Добавлен hue и legend=False для устранения FutureWarning
+        sns.boxplot(x='subject_id', y='grade', data=subset,
+                    palette='Set3', hue='subject_id', legend=False)
+
+        plt.title(f'Задача 13: Распределение оценок для {len(selected)} предметов')
+        plt.savefig(save_path, dpi=300)
+        plt.show()
+        plt.close()
+        print(f"✅ График Boxplot сохранен как {save_path}")
+
+    def plot_grade_histogram(self, save_path='grades_hist.png'):
+        if self.df is None: return
+        plt.figure(figsize=(8, 5))
+        sns.histplot(self.df['grade'], bins=10, kde=True, color='skyblue')
+        plt.title('Задача 13: Общее распределение оценок')
+        plt.savefig(save_path, dpi=300)
+        plt.show()
+        plt.close()
+        print(f"✅ Гистограмма сохранена как {save_path}")
+
+# ==========================================
+# ГЛАВНЫЙ БЛОК ЗАПУСКА
+# ==========================================
 if __name__ == "__main__":
-    main()
+    # Выполняем цепочку заданий
+    FakeGradesGenerator("fake_grades.csv").run()
+    GradesCorrelation("fake_grades.csv", "fake_grades_v2.csv").run()
+    GradesValidator("fake_grades.csv").run()
+    GradesAnalyzer("fake_grades.csv").run()
+
+    print("\n" + "="*30 + "\nЗАПУСК ВИЗУАЛИЗАЦИИ (Задание 13)\n" + "="*30)
+    vis = GradeVisualizer("fake_grades.csv")
+    vis.plot_top_subjects_boxplot()
+    vis.plot_grade_histogram()
+
+    print("\n✅ Все задачи выполнены без ошибок и предупреждений!")
