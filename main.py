@@ -6,7 +6,8 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import os
 
-# ========== Задание 9: Генератор исходных данных ==========
+
+# ========== 9. FakeGradesGenerator ==========
 class FakeGradesGenerator:
     def __init__(self, filename, seed=42):
         self.filename = filename
@@ -28,7 +29,8 @@ class FakeGradesGenerator:
         self.generate()
         print(f"=== Задание 9: Файл '{self.filename}' создан ===")
 
-# ========== Задание 10: Добавление корреляции ==========
+
+# ========== 10. GradesCorrelation ==========
 class GradesCorrelation:
     def __init__(self, input_file, output_file, seed=42):
         self.input_file = input_file
@@ -55,35 +57,38 @@ class GradesCorrelation:
 
     def run(self):
         self.process()
-        print(f"=== Задание 10: Файл '{self.output_file}' с корреляцией создан ===")
+        print(f"=== Задание 10: Файл '{self.output_file}' создан ===")
 
-# ========== Задание 11: Валидация ==========
+
+# ========== 11. GradesValidator ==========
 class GradesValidator:
     def __init__(self, filename):
         self.filename = filename
 
     def run(self):
-        print("\n=== Задание 11: Валидация данных ===")
+        print("\n=== Задание 11: Валидация ===")
         df = pd.read_csv(self.filename)
-        print(f"✅ Файл '{self.filename}' успешно загружен.")
+        print(f"✅ Файл '{self.filename}' загружен.")
         if (df['grade'] < 2).any() or (df['grade'] > 5).any():
             print("❌ Ошибка: оценки вне диапазона!")
         else:
-            print("✅ Все оценки в диапазоне [2, 5].")
+            print("✅ Все оценки в норме.")
         print(df['grade'].describe())
 
-# ========== Задание 12: Анализ ==========
+
+# ========== 12. GradesAnalyzer ==========
 class GradesAnalyzer:
     def __init__(self, filename):
         self.filename = filename
 
     def run(self):
-        print("\n=== Задание 12: Анализ средних баллов ===")
+        print("\n=== Задание 12: Анализ ===")
         df = pd.read_csv(self.filename)
         means = df.groupby('subject_id')['grade'].mean().sort_values(ascending=False)
         print(means.reset_index())
 
-# ========== Задание 13: Визуализация (Исправлено) ==========
+
+# ========== 13. GradeVisualizer (ИСПРАВЛЕНО) ==========
 class GradeVisualizer:
     def __init__(self, file_path):
         self.file_path = file_path
@@ -102,14 +107,20 @@ class GradeVisualizer:
 
         plt.figure(figsize=(10, 6))
         # ИСПРАВЛЕНИЕ: Добавлен hue и legend=False для устранения FutureWarning
-        sns.boxplot(x='subject_id', y='grade', data=subset,
-                    palette='Set3', hue='subject_id', legend=False)
+        sns.boxplot(
+            x='subject_id',
+            y='grade',
+            data=subset,
+            palette='Set3',
+            hue='subject_id',
+            legend=False
+        )
 
-        plt.title(f'Задача 13: Распределение оценок для {len(selected)} предметов')
+        plt.title(f'Задача 13: Распределение оценок ({len(selected)} предметов)')
         plt.savefig(save_path, dpi=300)
         plt.show()
         plt.close()
-        print(f"✅ График Boxplot сохранен как {save_path}")
+        print(f"✅ Boxplot сохранен: {save_path}")
 
     def plot_grade_histogram(self, save_path='grades_hist.png'):
         if self.df is None: return
@@ -119,18 +130,23 @@ class GradeVisualizer:
         plt.savefig(save_path, dpi=300)
         plt.show()
         plt.close()
-        print(f"✅ Гистограмма сохранена как {save_path}")
+        print(f"✅ Гистограмма сохранена: {save_path}")
 
+
+# ========== ГЛАВНЫЙ ЗАПУСК ==========
 if __name__ == "__main__":
-    # Выполняем цепочку заданий
+    # Выполняем все задачи по порядку
     FakeGradesGenerator("fake_grades.csv").run()
     GradesCorrelation("fake_grades.csv", "fake_grades_v2.csv").run()
     GradesValidator("fake_grades.csv").run()
     GradesAnalyzer("fake_grades.csv").run()
 
-    print("\n" + "="*30 + "\nЗАПУСК ВИЗУАЛИЗАЦИИ (Задание 13)\n" + "="*30)
+    print("\n" + "=" * 35)
+    print("ВЫПОЛНЕНИЕ ЗАДАНИЯ 13 (ВИЗУАЛИЗАЦИЯ)")
+    print("=" * 35)
+
     vis = GradeVisualizer("fake_grades.csv")
     vis.plot_top_subjects_boxplot()
     vis.plot_grade_histogram()
 
-    print("\n✅ Все задачи выполнены без ошибок и предупреждений!")
+    print("\n✅ Скрипт успешно завершил работу.")
