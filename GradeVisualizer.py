@@ -7,7 +7,7 @@ import seaborn as sns
 import os
 
 
-# ========== Задание 9: Генератор исходных данных ==========
+# 9
 class FakeGradesGenerator:
     def __init__(self, filename, seed=42):
         self.filename = filename
@@ -30,7 +30,7 @@ class FakeGradesGenerator:
         print(f"=== Задание 9: Файл '{self.filename}' успешно создан ===")
 
 
-# ========== Задание 10: Генерация скоррелированных данных ==========
+# 10
 class GradesCorrelation:
     def __init__(self, input_file, output_file, seed=42):
         self.input_file = input_file
@@ -60,7 +60,7 @@ class GradesCorrelation:
         print(f"=== Задание 10: Файл '{self.output_file}' с корреляцией создан ===")
 
 
-# ========== Задание 11: Валидация данных ==========
+# 11
 class GradesValidator:
     def __init__(self, filename):
         self.filename = filename
@@ -76,7 +76,7 @@ class GradesValidator:
         print(df['grade'].describe())
 
 
-# ========== Задание 12: Анализ ==========
+# 12
 class GradesAnalyzer:
     def __init__(self, filename):
         self.filename = filename
@@ -89,7 +89,7 @@ class GradesAnalyzer:
         print(means.reset_index())
 
 
-# ========== Задание 13: Визуализация (Исправлено) ==========
+# 13
 class GradeVisualizer:
     def __init__(self, file_path):
         self.file_path = file_path
@@ -139,24 +139,20 @@ class GradeVisualizer:
         plt.close()
         print(f"✅ Гистограмма сохранена как {save_path}")
 
-
-# ==========================================
-# ГЛАВНЫЙ БЛОК ЗАПУСКА (ОДИН MAIN ФАЙЛ)
-# ==========================================
 if __name__ == "__main__":
-    # Задания 9 и 10
+    # 9 и 10
     FakeGradesGenerator("fake_grades.csv").run()
     GradesCorrelation("fake_grades.csv", "fake_grades_v2.csv").run()
 
-    # Задание 11
+    # 11
     validator = GradesValidator("fake_grades.csv")
     validator.run()
 
-    # Задание 12
+    # 12
     analyzer = GradesAnalyzer("fake_grades.csv")
     analyzer.run()
 
-    # ЗАДАНИЕ 13: Визуализация
+    # 13
     print("\n" + "=" * 30 + "\nВЫПОЛНЕНИЕ ЗАДАНИЯ 13\n" + "=" * 30)
     vis = GradeVisualizer("fake_grades.csv")
     vis.plot_top_subjects_boxplot()
