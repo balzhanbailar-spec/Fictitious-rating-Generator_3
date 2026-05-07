@@ -33,7 +33,7 @@ class GradesCorrelation:
 # 11
 class GradesValidator:
     def validate(self, df: pd.DataFrame):
-        print("\n=== Валидация ===")
+        print("Валидация")
         print(df.dtypes)
 
         valid = df["grade"].between(2, 5).all()
@@ -45,7 +45,7 @@ class GradesValidator:
 # 12
 class GradesAnalyzer:
     def analyze(self, df: pd.DataFrame):
-        print("\n=== Средние по предметам ===")
+        print("Пәндер бойынша орташа баға")
         means = df.groupby("subject_id")["grade"].mean().sort_values(ascending=False)
         print(means)
         return means
