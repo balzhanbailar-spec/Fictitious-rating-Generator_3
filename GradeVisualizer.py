@@ -129,4 +129,3 @@ if __name__ == "__main__":
     vis = GradeVisualizer("fake_grades.csv")
     vis.plot_top_subjects_boxplot()
     vis.plot_grade_histogram()
-    print("Барлық тапсырмалар орындалды")

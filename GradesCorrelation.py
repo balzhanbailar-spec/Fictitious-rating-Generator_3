@@ -32,8 +32,8 @@ class GradesCorrelation:
                 student = row['student']
                 subject = row['subject']
             except KeyError as e:
-                print("Доступные колонки:", list(row.keys()))
-                raise KeyError(f"Не найдена колонка {e}. Проверьте имена колонок в CSV.")
+                print("Қолжетімді жолдар:", list(row.keys()))
+                raise KeyError(f"{e} бағаны жоқ. Бағандарды CSV-ден тексеріңіз.")
             noise = self.rng.normal(0, 0.3)
             grade2 = 0.7 * grade1 + noise
             grade2 = np.clip(grade2, 2.0, 5.0)
@@ -44,7 +44,7 @@ class GradesCorrelation:
             writer.writerows(output_rows)
     def run(self):
         self.process()
-        print(f"Создан файл {self.output_file} с корреляцией (grade2 = 0.7*grade1 + шум)")
+        print(f"{self.output_file} корреляциялық файлы құрылды (grade2 = 0.7*grade1 + шум)")
 if __name__ == "__main__":
     app = GradesCorrelation("fake_grades.csv", "fake_grades_v2.csv", seed=42)
     app.run()
