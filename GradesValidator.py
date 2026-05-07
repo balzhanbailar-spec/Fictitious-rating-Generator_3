@@ -30,7 +30,6 @@ class GradesCorrelation:
         self.output_file = output_file
         self.rng = np.random.default_rng(seed)
     def process(self):
-        # Чтение исходного файла
         with open(self.input_file, "r") as f:
             reader = csv.DictReader(f)
             rows = list(reader)
@@ -60,52 +59,52 @@ class GradesValidator:
         self.df = None
     def load(self):
         self.df = pd.read_csv(self.filename)
-        print(f"✅ Файл '{self.filename}' успешно загружен.")
+        print(f"'{self.filename}' файлы сәтті сақталды")
     def check_types(self):
         expected_int = ['student_id', 'subject_id']
         for col in expected_int:
             if col not in self.df.columns:
-                print(f"❌ Колонка '{col}' отсутствует.")
+                print(f"'{col}' бағаны жоқ")
                 return
             if not pd.api.types.is_integer_dtype(self.df[col]):
-                print(f"❌ Колонка '{col}' должна быть целочисленной.")
+                print(f"'{col}' бағаны бүтін сан болуы тиіс")
                 return
         if 'grade' not in self.df.columns:
-            print("❌ Колонка 'grade' отсутствует.")
+            print("'grade' бағаны жоқ ")
             return
         if not pd.api.types.is_numeric_dtype(self.df['grade']):
-            print("❌ Колонка 'grade' должна быть числовой.")
+            print("'grade' бағанды сандық болуы тиіс")
             return
-        print("✅ Типы данных соответствуют ожидаемым.")
+        print("Деректер күтілгенге сәйкес келеді")
     def check_grade_range(self, min_grade=2, max_grade=5):
         grades = self.df['grade']
         if (grades < min_grade).any() or (grades > max_grade).any():
-            print(f"❌ Есть оценки вне диапазона [{min_grade}, {max_grade}].")
+            print(f" Бағалар[{min_grade}, {max_grade}] диапазонында емес")
         else:
-            print(f"✅ Колонка 'grade': все оценки в диапазоне [{min_grade}, {max_grade}].")
+            print(f"'grade' бағаны: барлық бағалар[{min_grade}, {max_grade}] диапазонында")
     def show_info(self):
-        print("\n=== Общая информация ===")
+        print("Жалпы ақпарат")
         self.df.info()
-        print("\n=== Первые 5 строк ===")
+        print("Алғашқы 5 жол")
         print(self.df.head())
-        print("\n=== Описательная статистика ===")
+        print("Сипаттамалық статистика")
         print(self.df.describe())
     def run(self):
         self.load()
         self.check_types()
         self.check_grade_range()
         self.show_info()
-        print("\n✅ Валидация пройдена успешно.")
+        print("Валидация сәтті орындалды")
 if __name__ == "__main__":
-    # Задание 9
-    print("=== Задание 9: fake_grades.csv ===\n")
+    # 9
+    print("9-тапсырма: fake_grades.csv ")
     gen = FakeGradesGenerator("fake_grades.csv", seed=42)
     gen.run()
-    # Задание 10
-    print("\n=== Задание 10: fake_grades_v2.csv ===\n")
+    # 10
+    print("10-тапсырма: fake_grades_v2.csv")
     corr = GradesCorrelation("fake_grades.csv", "fake_grades_v2.csv", seed=42)
     corr.run()
-    # Задание 11
-    print("\n=== Задание 11: Валидация fake_grades.csv ===\n")
+    # 11
+    print("11-тапсырма: Валидация fake_grades.csv")
     validator = GradesValidator("fake_grades.csv")
     validator.run()

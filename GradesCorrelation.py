@@ -13,7 +13,6 @@ class GradesCorrelation:
                 reader = csv.DictReader(file)
                 rows = []
                 for row in reader:
-                    # Приводим ключи к нижнему регистру и убираем пробелы
                     clean_row = {k.strip().lower(): v for k, v in row.items()}
                     rows.append(clean_row)
             else:
@@ -30,8 +29,8 @@ class GradesCorrelation:
         for row in rows:
             try:
                 grade1 = float(row['grade'])
-                student = row['student']   # теперь используем 'student'
-                subject = row['subject']   # теперь используем 'subject'
+                student = row['student']
+                subject = row['subject']
             except KeyError as e:
                 print("Доступные колонки:", list(row.keys()))
                 raise KeyError(f"Не найдена колонка {e}. Проверьте имена колонок в CSV.")
